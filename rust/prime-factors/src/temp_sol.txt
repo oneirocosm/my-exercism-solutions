@@ -1,0 +1,38 @@
+struct Factorization {
+    factors: Vec<u64>,
+    remain: u64,
+}
+
+impl Factorization {
+    fn from(n: u64) -> Factorization {
+        Factorization {
+            factors: Vec::new(),
+            remain: n,
+        }
+    }
+
+    fn divide_out(mut self, n: u64) -> Factorization {
+        self.remain /= n;
+        self.factors.push(n);
+        self
+    }
+}
+
+pub fn factors(n: u64) -> Vec<u64> {
+    let fact = Factorization::from(n);
+
+    (2..=n).filter(|i| is_factor_of(*i,n))
+           .fold(fact, |acc, i| rpt_div(acc, i)).factors
+}
+
+fn rpt_div(fact: Factorization, n: u64) -> Factorization {
+    let remainder = fact.remain;
+
+    (1..).map(|i| n.pow(i))
+         .take_while(|i| is_factor_of(*i, remainder))
+         .fold(fact, |acc, _| acc.divide_out(n))
+}
+
+fn is_factor_of(i: u64, n: u64) -> bool {
+    (n % i) == 0
+}
