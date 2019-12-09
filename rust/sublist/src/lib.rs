@@ -15,6 +15,7 @@ pub enum Comparison {
     Superlist,
     Unequal,
 }
+
 /// # Description:
 /// Compares one list to another and returns an enum that
 /// corresponds with how it relates to the other list
@@ -26,32 +27,12 @@ pub enum Comparison {
 /// # Return:
 /// Comparison - an enum representing how list compares to compare_to
 pub fn sublist<T: PartialEq>(list: &[T], compare_to: &[T]) -> Comparison {
-    let list_len = list.len();
-    let compare_len = compare_to.len();
-
-    if list_len < compare_len {
-        if contained_within(list, compare_to) {
-            Comparison::Sublist
-        }
-        else {
-            Comparison::Unequal
-        }
-    }
-    else if list_len == compare_len {
-        if list == compare_to {
-            Comparison::Equal
-        }
-        else {
-            Comparison::Unequal
-        }
-    }
-    else {
-        if contained_within(compare_to, list) {
-            Comparison::Superlist
-        }
-        else {
-            Comparison::Unequal
-        }
+    // note: if A is a subset of B, and B is a subset of A, then A=B
+    match (is_subset(list, compare_to), is_subset(compare_to, list)) {
+        (true, true) => Comparison::Equal,
+        (true, false) => Comparison::Sublist,
+        (false, true) => Comparison::Superlist,
+        (false, false) => Comparison::Unequal,
     }
 }
 
@@ -66,12 +47,9 @@ pub fn sublist<T: PartialEq>(list: &[T], compare_to: &[T]) -> Comparison {
 ///
 /// # Return:
 /// bool - true if the smaller list is within the larger list
-fn contained_within<T: PartialEq>(small: &[T], big: &[T]) -> bool {
-    let small_len = small.len();
-    if small_len == 0 {
-        return true
+fn is_subset<T: PartialEq>(small: &[T], big: &[T]) -> bool {
+    match small.len() {
+        0 => true,
+        n => big.windows(n).any(|subset| subset == small),
     }
-
-    let mut subsets = big.windows(small_len);
-    subsets.any(|subset| subset == small)
 }
