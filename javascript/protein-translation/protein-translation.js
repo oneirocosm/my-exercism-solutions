@@ -1,4 +1,4 @@
-var decoding = {
+const protein_decoding = {
   AUG: "Methionine",
   UUU: "Phenylalanine",
   UUC: "Phenylalanine",
@@ -12,32 +12,32 @@ var decoding = {
   UAC: "Tyrosine",
   UGU: "Cysteine",
   UGC: "Cysteine",
-  UGG: "Tryptophan",
-  UAA: "STOP",
-  UAG: "STOP",
-  UGA: "STOP"
+  UGG: "Tryptophan"
 };
 
+const stop_codons = ["UAA", "UAG", "UGA"];
+
 export const translate = (chain = "") => {
-  // split into chunks of 3
-  var codons = chain.match(/.{1,3}/g) || [];
+  const codons = parseRnaIntoCodons(chain);
 
-  // convert codons
   var proteins = [];
-  for (var i = 0; i < codons.length; i++) {
-    var codon = codons[i];
-
-    if (decoding[codon] === undefined) {
-      throw "Invalid codon";
-    } else {
-      proteins.push(decoding[codon]);
+  for (const codon of codons) {
+    if (stop_codons.includes(codon)) {
+      break;
     }
-  }
-
-  // truncate if stop appears
-  var stop_point = proteins.indexOf("STOP");
-  if (stop_point != -1) {
-    proteins.length = stop_point;
+    proteins.push(convertCodonToProtein(codon));
   }
   return proteins;
+};
+
+const parseRnaIntoCodons = (rna = "") => {
+  return rna.match(/.{1,3}/g) || [];
+};
+
+const convertCodonToProtein = codon => {
+  const protein = protein_decoding[codon];
+  if (protein === undefined) {
+    throw "Invalid codon";
+  }
+  return protein;
 };
