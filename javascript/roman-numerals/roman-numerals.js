@@ -1,6 +1,4 @@
-// These numbers aren't prime per se, but they are
-// the basic components to building any roman numeral
-const primeNumeralToValue = {
+const romanNumeralBasis = {
   M: 1000,
   CM: 900,
   D: 500,
@@ -16,13 +14,13 @@ const primeNumeralToValue = {
   I: 1
 };
 
-export const toRoman = remainder => {
+export const toRoman = decimalNumber => {
   var romanRepr = "";
-  for (const primeNumeral in primeNumeralToValue) {
-    const primeValue = primeNumeralToValue[primeNumeral];
-    const multiplesOfPrime = Math.trunc(remainder / primeValue);
-    remainder %= primeValue;
-    romanRepr += primeNumeral.repeat(multiplesOfPrime);
+  for (const romanNumeralBasisMember in romanNumeralBasis) {
+    const basisValue = romanNumeralBasis[romanNumeralBasisMember];
+    const multiplesOfBasisMember = Math.trunc(decimalNumber / basisValue);
+    decimalNumber %= basisValue;
+    romanRepr += romanNumeralBasisMember.repeat(multiplesOfBasisMember);
   }
   return romanRepr;
 };

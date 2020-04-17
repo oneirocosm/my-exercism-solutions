@@ -18,9 +18,5 @@ export const decodedValue = (colors = []) => {
 };
 
 const mapColorsToValues = (colors = []) => {
-  var values = [];
-  for (const color of colors) {
-    values.push(COLORS.indexOf(color));
-  }
-  return values;
+  return colors.map(color =>COLORS.indexOf(color));
 };

@@ -17,12 +17,11 @@ impl BoardState {
         let to_update = self.find_squares_to_update(index);
 
         self.n_mines[index] = None;
-        for surround in to_update.iter() {
-            if let Some(current) = self.n_mines[*surround] {
-                self.n_mines[*surround] = Some(current + 1);
-            }
+        for surround in to_update {
+            self.n_mines[surround] = self.n_mines[surround].map(|count| count + 1);
         }
     }
+
     fn find_squares_to_update(&self, index: usize) -> Vec<usize> {
         let has_left = self.has_left(index);
         let has_right = self.has_right(index);
@@ -87,8 +86,8 @@ impl Into<Vec<String>> for BoardState {
     fn into(self) -> Vec<String> {
         let n_mines: Vec<char> = self
             .n_mines
-            .iter()
-            .map(|square| Self::parse_square(*square))
+            .into_iter()
+            .map(Self::parse_square)
             .collect();
         n_mines
             .chunks(self.n_cols)
@@ -114,7 +113,7 @@ pub fn annotate(minefield: &[&str]) -> Vec<String> {
         .map(|line| line.chars())
         .flatten()
         .enumerate()
-        .filter_map(|(i, square)| if is_mine(square) { Some(i) } else { None });
+        .filter_map(|(i, square)| if square == '*' { Some(i) } else { None });
 
     // for each mine, add 1 to surrounding tiles
     let mut board = BoardState::new(n_rows, n_cols);
@@ -123,11 +122,4 @@ pub fn annotate(minefield: &[&str]) -> Vec<String> {
     }
 
     board.into()
-}
-
-fn is_mine(square: char) -> bool {
-    match square {
-        '*' => true,
-        _ => false,
-    }
 }
