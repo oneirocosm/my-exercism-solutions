@@ -2,30 +2,22 @@
 
 export class NucleotideCounts {
   static parse(dnaStrand = "") {
-    var count = {};
-    for (const nucleotide of [...dnaStrand]) {
-      this.incrementCount(count, nucleotide);
-    }
-    return this.toString(count);
+    var nucleotideCount = { A: 0, C: 0, G: 0, T: 0 };
+    return this.toString(
+      [...dnaStrand].reduce(this.incrementCount, nucleotideCount)
+    );
   }
 
-  static incrementCount(count, nucleotide) {
-    if (!validNucleotides.includes(nucleotide)) {
+  static incrementCount(nucleotideCount, nucleotide) {
+    if (!Object.keys(nucleotideCount).includes(nucleotide)) {
       throw "Invalid nucleotide in strand";
     }
 
-    if (count[nucleotide] === undefined) {
-      count[nucleotide] = 1;
-    } else {
-      count[nucleotide] += 1;
-    }
+    nucleotideCount[nucleotide]++;
+    return nucleotideCount;
   }
 
-  static toString(count) {
-    return validNucleotides
-      .map(nucleotide => (count[nucleotide] || 0).toString())
-      .join(" ");
+  static toString(nucleotideCount) {
+    return Object.values(nucleotideCount).join(" ");
   }
 }
-
-const validNucleotides = ["A", "C", "G", "T"];
