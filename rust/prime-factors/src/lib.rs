@@ -1,4 +1,4 @@
-type Factorization = Iterator<Item = u64>;
+type Factorization = dyn Iterator<Item = u64>;
 
 pub fn factors(n: u64) -> Vec<u64> {
     // separates n into its prime factor decomposition
