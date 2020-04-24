@@ -2,42 +2,42 @@
 
 const HOURS_PER_DAY = 24;
 const MINUTES_PER_HOUR = 60;
+const MINUTES_PER_DAY = MINUTES_PER_HOUR * HOURS_PER_DAY;
 
 export class Clock {
   constructor(hours = 0, minutes = 0) {
-    const overflowHours = Math.floor(minutes / MINUTES_PER_HOUR);
-    this.minutes = mod(minutes, MINUTES_PER_HOUR);
-    this.hours = mod(hours + overflowHours, HOURS_PER_DAY);
+    const totalMinutes = minutes + hours * MINUTES_PER_HOUR;
+    this.minutes = mod(totalMinutes, MINUTES_PER_DAY);
   }
 
   toString() {
+    const totalHours = Math.floor(this.minutes / MINUTES_PER_HOUR);
+    const hours = mod(totalHours, HOURS_PER_DAY);
+    const minutes = mod(this.minutes, MINUTES_PER_HOUR);
+
     return (
-      this.hours.toFixed().padStart(2, "0") +
+      hours.toFixed().padStart(2, "0") +
       ":" +
-      this.minutes.toFixed().padStart(2, "0")
+      minutes.toFixed().padStart(2, "0")
     );
   }
 
   plus(plusMinutes) {
     const sumMinutes = this.minutes + plusMinutes;
-    const overflowHours = Math.floor(sumMinutes / MINUTES_PER_HOUR);
-    const newMinutes = mod(sumMinutes, MINUTES_PER_HOUR);
-    const newHours = mod(this.hours + overflowHours, HOURS_PER_DAY);
-    return new Clock(newHours, newMinutes);
+    const newMinutes = mod(sumMinutes, MINUTES_PER_DAY);
+    const noHours = 0;
+    return new Clock(noHours, newMinutes);
   }
 
   minus(minusMinutes) {
     const diffMinutes = this.minutes - minusMinutes;
-    const overflowHours = Math.floor(diffMinutes / MINUTES_PER_HOUR);
-    const newMinutes = mod(diffMinutes, MINUTES_PER_HOUR);
-    const newHours = mod(this.hours + overflowHours, HOURS_PER_DAY);
-    return new Clock(newHours, newMinutes);
+    const newMinutes = mod(diffMinutes, MINUTES_PER_DAY);
+    const noHours = 0;
+    return new Clock(noHours, newMinutes);
   }
 
   equals(otherClock) {
-    const equalHours = this.hours == otherClock.hours;
-    const equalMinutes = this.minutes == otherClock.minutes;
-    return equalHours && equalMinutes;
+    return this.minutes == otherClock.minutes;
   }
 }
 
