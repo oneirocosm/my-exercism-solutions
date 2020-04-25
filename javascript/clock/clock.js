@@ -15,29 +15,24 @@ export class Clock {
     const hours = mod(totalHours, HOURS_PER_DAY);
     const minutes = mod(this.minutes, MINUTES_PER_HOUR);
 
-    return (
-      hours.toFixed().padStart(2, "0") +
-      ":" +
-      minutes.toFixed().padStart(2, "0")
-    );
+    return Clock.formatDigits(hours) + ":" + Clock.formatDigits(minutes);
   }
 
   plus(plusMinutes) {
-    const sumMinutes = this.minutes + plusMinutes;
-    const newMinutes = mod(sumMinutes, MINUTES_PER_DAY);
     const noHours = 0;
-    return new Clock(noHours, newMinutes);
+    return new Clock(noHours, this.minutes + plusMinutes);
   }
 
   minus(minusMinutes) {
-    const diffMinutes = this.minutes - minusMinutes;
-    const newMinutes = mod(diffMinutes, MINUTES_PER_DAY);
-    const noHours = 0;
-    return new Clock(noHours, newMinutes);
+    return this.plus(-minusMinutes);
   }
 
   equals(otherClock) {
     return this.minutes == otherClock.minutes;
+  }
+
+  static formatDigits(digit) {
+    return digit.toFixed().padStart(2, "0");
   }
 }
 
