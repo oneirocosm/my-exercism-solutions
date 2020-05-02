@@ -1,0 +1,11 @@
+[package]
+edition = "2018"
+name = "allergies"
+version = "1.1.0"
+
+[dependencies]
+strum = "0.18.0"
+strum_macros="0.18.0"
+num = "0.2.1"
+num-traits = "0.2"
+num-derive = "0.3"
