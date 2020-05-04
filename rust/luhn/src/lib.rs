@@ -12,10 +12,8 @@ pub fn is_valid(code: &str) -> bool {
 fn calc_luhn_sum(code: &str) -> Option<u32> {
     let valid_digits = code
         .chars()
-        .filter_map(|digit| match digit {
-            ' ' => None,
-            d => Some(d.to_digit(10)),
-        })
+        .filter(|&digit| digit != ' ')
+        .map(|digit| digit.to_digit(10))
         .collect::<Option<Vec<_>>>()?;
 
     if valid_digits.len() < 2 {
