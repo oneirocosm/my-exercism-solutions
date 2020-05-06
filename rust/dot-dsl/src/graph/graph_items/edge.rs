@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Edge {
-    nodes: (String, String),
+pub struct Edge<'a> {
+    nodes: (&'a str, &'a str),
     attrs: HashMap<String, String>,
 }
 
-impl Edge {
-    pub fn new(node0: &str, node1: &str) -> Self {
+impl<'a> Edge<'a> {
+    pub fn new(node0: &'a str, node1: &'a str) -> Self {
         Self {
-            nodes: (node0.into(), node1.into()),
+            nodes: (node0, node1),
             attrs: HashMap::new(),
         }
     }

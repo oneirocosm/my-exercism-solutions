@@ -4,13 +4,13 @@ use graph_items::{edge::Edge, node::Node};
 use std::collections::HashMap;
 
 #[derive(Clone, Debug, Default)]
-pub struct Graph {
-    pub nodes: Vec<Node>,
-    pub edges: Vec<Edge>,
+pub struct Graph<'a> {
+    pub nodes: Vec<Node<'a>>,
+    pub edges: Vec<Edge<'a>>,
     pub attrs: HashMap<String, String>,
 }
 
-impl Graph {
+impl<'a> Graph<'a> {
     pub fn new() -> Self {
         Self {
             nodes: Vec::new(),
@@ -19,12 +19,12 @@ impl Graph {
         }
     }
 
-    pub fn with_nodes(mut self, nodes: &[Node]) -> Self {
+    pub fn with_nodes(mut self, nodes: &[Node<'a>]) -> Self {
         self.nodes = nodes.into();
         self
     }
 
-    pub fn with_edges(mut self, edges: &[Edge]) -> Self {
+    pub fn with_edges(mut self, edges: &[Edge<'a>]) -> Self {
         self.edges = edges.into();
         self
     }
