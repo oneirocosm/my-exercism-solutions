@@ -1,19 +1,16 @@
 #include "leap.h"
 
+// static function declarations
+static bool divisible_by(int32_t year, int32_t divisor);
+
+// function definitions
 namespace leap {
-    bool is_leap_year(uint32_t year) {
-        bool meets_leap_criteria;
-
-        if ((year % 400) == 0) {
-            meets_leap_criteria = true;
-        } else if ((year % 100) == 0) {
-            meets_leap_criteria = false;
-        } else if ((year % 4) == 0) {
-            meets_leap_criteria = true;
-        } else {
-            meets_leap_criteria = false;
-        }
-
-        return meets_leap_criteria;
+    bool is_leap_year(int32_t year) {
+        return divisible_by(year, 400) || (divisible_by(year, 4) && !divisible_by(year, 100));
     }
 }  // namespace leap
+
+bool divisible_by(int32_t year, int32_t divisor)
+{
+    return year % divisor == 0;
+}
