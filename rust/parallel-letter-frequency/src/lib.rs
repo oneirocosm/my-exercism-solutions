@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use crossbeam::crossbeam_channel;
 use crossbeam_utils::thread;
 
 pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
@@ -9,12 +8,10 @@ pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
     let _ = thread::scope(|scope| {
         let input = Arc::new(Mutex::new(input.iter()));
         let mut handles = Vec::new();
-        let (tx, rx) = crossbeam_channel::bounded(worker_count);
 
         for _ in 0..worker_count {
             let data = input.clone();
             let mut part_count = HashMap::<char, usize>::new();
-            let local_tx = tx.clone();
             let handle = scope.spawn(move |_| {
                 loop {
                     let line = data.lock().unwrap().next();
@@ -23,16 +20,13 @@ pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
                         Some(content) => update_from_str(&mut part_count, content),
                     }
                 }
-                local_tx.send(part_count).unwrap();
+                part_count
             });
             handles.push(handle);
         }
 
         for handle in handles {
-            handle.join().unwrap();
-        }
-
-        for received in rx.try_iter() {
+            let received = handle.join().unwrap();
             update_from_hash(&mut counter, received);
         }
     });
@@ -47,8 +41,8 @@ fn update_from_hash(main: &mut HashMap<char, usize>, other: HashMap<char, usize>
 
 fn update_from_str(counter: &mut HashMap<char, usize>, input: &str) {
     input
+        .to_lowercase()
         .chars()
         .filter(|c| c.is_alphabetic())
-        .flat_map(|c| c.to_lowercase())
         .for_each(|c| *counter.entry(c).or_insert(0) += 1);
 }
