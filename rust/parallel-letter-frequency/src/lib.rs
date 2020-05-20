@@ -4,22 +4,27 @@ use std::collections::HashMap;
 pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
     let chunk_sz = input.len() / worker_count + 1;
 
-    let handles = input
+    rayon::ThreadPoolBuilder::new()
+        .num_threads(worker_count)
+        .build()
+        .unwrap();
+
+    input
         .par_chunks(chunk_sz)
         .map(|data| {
-            let mut part_count = HashMap::new();
-            for line in data {
-                update_from_str(&mut part_count, line);
-            }
-            part_count
+            data.into_iter()
+                .fold(HashMap::new(), |mut part_count, line| {
+                    update_from_str(&mut part_count, line);
+                    part_count
+                })
         })
-        .collect::<Vec<_>>();
-
-    let mut counter = HashMap::new();
-    for received in handles {
-        update_from_hash(&mut counter, &received);
-    }
-    counter
+        .reduce(
+            || HashMap::new(),
+            |mut counter, part_count| {
+                update_from_hash(&mut counter, &part_count);
+                counter
+            },
+        )
 }
 
 fn update_from_hash(main: &mut HashMap<char, usize>, other: &HashMap<char, usize>) {
