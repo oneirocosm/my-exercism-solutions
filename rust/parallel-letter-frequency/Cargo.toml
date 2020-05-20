@@ -4,4 +4,5 @@ name = "parallel-letter-frequency"
 version = "0.0.0"
 
 [dependencies]
+rayon = "1.3.0"
 crossbeam-utils = "0.7.2"
