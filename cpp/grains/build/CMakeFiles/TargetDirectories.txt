@@ -1,0 +1,4 @@
+/home/colton/exercism/cpp/grains/build/CMakeFiles/edit_cache.dir
+/home/colton/exercism/cpp/grains/build/CMakeFiles/rebuild_cache.dir
+/home/colton/exercism/cpp/grains/build/CMakeFiles/test_grains.dir
+/home/colton/exercism/cpp/grains/build/CMakeFiles/grains.dir
