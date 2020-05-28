@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-pub enum Rank {
+pub enum CardRank {
     Two,
     Three,
     Four,
@@ -17,7 +17,7 @@ pub enum Rank {
     Ace,
 }
 
-impl From<u8> for Rank {
+impl From<u8> for CardRank {
     fn from(val: u8) -> Self {
         match val {
             2 => Self::Two,
@@ -37,7 +37,7 @@ impl From<u8> for Rank {
     }
 }
 
-impl Into<u8> for Rank {
+impl Into<u8> for CardRank {
     fn into(self) -> u8 {
         match self {
             Self::Two => 2,
@@ -73,7 +73,7 @@ pub enum CardError<'a> {
 
 #[derive(Debug, Copy, Clone, Hash, PartialEq)]
 pub struct Card {
-    pub rank: Rank,
+    pub rank: CardRank,
     pub suit: Suit,
 }
 
@@ -83,19 +83,19 @@ impl Card {
         let (rank, suit) = name.split_at(len - 1);
 
         let rank = match rank {
-            "2" => Ok(Rank::Two),
-            "3" => Ok(Rank::Three),
-            "4" => Ok(Rank::Four),
-            "5" => Ok(Rank::Five),
-            "6" => Ok(Rank::Six),
-            "7" => Ok(Rank::Seven),
-            "8" => Ok(Rank::Eight),
-            "9" => Ok(Rank::Nine),
-            "10" => Ok(Rank::Ten),
-            "J" => Ok(Rank::Jack),
-            "Q" => Ok(Rank::Queen),
-            "K" => Ok(Rank::King),
-            "A" => Ok(Rank::Ace),
+            "2" => Ok(CardRank::Two),
+            "3" => Ok(CardRank::Three),
+            "4" => Ok(CardRank::Four),
+            "5" => Ok(CardRank::Five),
+            "6" => Ok(CardRank::Six),
+            "7" => Ok(CardRank::Seven),
+            "8" => Ok(CardRank::Eight),
+            "9" => Ok(CardRank::Nine),
+            "10" => Ok(CardRank::Ten),
+            "J" => Ok(CardRank::Jack),
+            "Q" => Ok(CardRank::Queen),
+            "K" => Ok(CardRank::King),
+            "A" => Ok(CardRank::Ace),
             r => Err(CardError::InvalidRank(r)),
         }?;
 
@@ -133,14 +133,14 @@ mod tests {
     #[test]
     fn create_ace_of_spades() {
         let card = Card::new("AS").unwrap();
-        assert_eq!(card.rank, Rank::Ace);
+        assert_eq!(card.rank, CardRank::Ace);
         assert_eq!(card.suit, Suit::Spades);
     }
 
     #[test]
     fn create_10_of_clubs() {
         let card = Card::new("10C").unwrap();
-        assert_eq!(card.rank, Rank::Ten);
+        assert_eq!(card.rank, CardRank::Ten);
         assert_eq!(card.suit, Suit::Clubs);
     }
 

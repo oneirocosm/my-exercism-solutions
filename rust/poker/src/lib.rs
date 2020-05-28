@@ -2,27 +2,26 @@ use std::cmp::Ordering;
 use std::collections::BTreeMap;
 
 mod card;
-use card::{Card, CardError, Rank};
+use card::{Card, CardError, CardRank};
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq, PartialOrd, Ord)]
-enum PokerRank {
-    HighCard(Vec<Rank>),
-    OnePair(Vec<Rank>),
-    TwoPair(Vec<Rank>),
-    ThreeOfAKind(Vec<Rank>),
-    LowAceStraight(Vec<Rank>),
-    Straight(Vec<Rank>),
-    Flush(Vec<Rank>),
-    FullHouse(Vec<Rank>),
-    FourOfAKind(Vec<Rank>),
-    StraightFlush(Vec<Rank>),
+enum HandRank {
+    HighCard(Vec<CardRank>),
+    OnePair(Vec<CardRank>),
+    TwoPair(Vec<CardRank>),
+    ThreeOfAKind(Vec<CardRank>),
+    Straight(CardRank),
+    Flush(Vec<CardRank>),
+    FullHouse(Vec<CardRank>),
+    FourOfAKind(Vec<CardRank>),
+    StraightFlush(CardRank),
 }
 
 #[derive(Debug, Clone)]
 struct Hand<'a> {
     repr: &'a str,
     cards: Vec<Card>,
-    rank_count: BTreeMap<Rank, usize>,
+    rank_count: BTreeMap<CardRank, usize>,
 }
 
 impl<'a> Hand<'a> {
@@ -41,29 +40,31 @@ impl<'a> Hand<'a> {
         })
     }
 
-    fn poker_rank(&self) -> PokerRank {
-        use PokerRank::*;
+    fn poker_rank(&self) -> HandRank {
+        use HandRank::*;
         match (
             self.rank_2_of_kind(),
             self.rank_3_of_kind(),
             self.rank_straight(),
             self.rank_flush(),
-            self.rank_full_house(),
             self.rank_4_of_kind(),
         ) {
-            (_, _, Some(Straight(r)), Some(Flush(_)), _, _) => StraightFlush(r),
-            (_, _, _, _, _, Some(rank)) => rank,
-            (_, _, _, _, Some(rank), _) => rank,
-            (_, _, _, Some(rank), _, _) => rank,
-            (_, _, Some(rank), _, _, _) => rank,
-            (_, Some(rank), _, _, _, _) => rank,
-            (Some(rank), _, _, _, _, _) => rank,
-            (_, _, _, _, _, _) => self.rank_cards(),
+            (_, _, Some(Straight(r)), Some(Flush(_)), _) => StraightFlush(r),
+            (_, _, _, _, Some(rank)) => rank,
+            (Some(OnePair(pair)), Some(ThreeOfAKind(mut rank)), _, _, _) => {
+                rank.extend(pair);
+                FullHouse(rank)
+            }
+            (_, _, _, Some(rank), _) => rank,
+            (_, _, Some(rank), _, _) => rank,
+            (_, Some(rank), _, _, _) => rank,
+            (Some(rank), _, _, _, _) => rank,
+            (_, _, _, _, _) => self.rank_cards(),
         }
     }
 
-    fn rank_cards(&self) -> PokerRank {
-        PokerRank::HighCard(
+    fn rank_cards(&self) -> HandRank {
+        HandRank::HighCard(
             self.cards
                 .iter()
                 .rev()
@@ -72,8 +73,8 @@ impl<'a> Hand<'a> {
         )
     }
 
-    fn rank_2_of_kind(&self) -> Option<PokerRank> {
-        use PokerRank::{OnePair, TwoPair};
+    fn rank_2_of_kind(&self) -> Option<HandRank> {
+        use HandRank::{OnePair, TwoPair};
 
         match self
             .rank_count
@@ -91,8 +92,8 @@ impl<'a> Hand<'a> {
         }
     }
 
-    fn rank_3_of_kind(&self) -> Option<PokerRank> {
-        use PokerRank::ThreeOfAKind;
+    fn rank_3_of_kind(&self) -> Option<HandRank> {
+        use HandRank::ThreeOfAKind;
 
         match self
             .rank_count
@@ -109,8 +110,8 @@ impl<'a> Hand<'a> {
         }
     }
 
-    fn rank_4_of_kind(&self) -> Option<PokerRank> {
-        use PokerRank::FourOfAKind;
+    fn rank_4_of_kind(&self) -> Option<HandRank> {
+        use HandRank::FourOfAKind;
 
         match self
             .rank_count
@@ -127,28 +128,17 @@ impl<'a> Hand<'a> {
         }
     }
 
-    fn rank_full_house(&self) -> Option<PokerRank> {
-        use PokerRank::{FullHouse, OnePair, ThreeOfAKind};
-        let mut ranks = match self.rank_3_of_kind() {
-            Some(ThreeOfAKind(r)) => Some(r),
-            _ => None,
-        }?;
-
-        let pair = match self.rank_2_of_kind() {
-            Some(OnePair(r)) => Some(r),
-            _ => None,
-        }?;
-
-        ranks.extend(pair);
-        Some(FullHouse(ranks))
-    }
-
-    fn rank_straight(&self) -> Option<PokerRank> {
-        use Rank::*;
-        let ranks = self.cards.iter().map(|card| card.rank).collect::<Vec<_>>();
+    fn rank_straight(&self) -> Option<HandRank> {
+        use CardRank::*;
+        let ranks = self
+            .cards
+            .iter()
+            .rev()
+            .map(|card| card.rank)
+            .collect::<Vec<_>>();
 
         if vec![
-            Ace, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King, Ace,
+            Ace, King, Queen, Jack, Ten, Nine, Eight, Seven, Six, Five, Four, Three, Two,
         ]
         .windows(5)
         .map(|x| x.into_iter().cloned().collect::<Vec<_>>())
@@ -157,15 +147,15 @@ impl<'a> Hand<'a> {
         .count()
             == 1
         {
-            Some(PokerRank::Straight(ranks))
-        } else if ranks == vec![Two, Three, Four, Five, Ace] {
-            Some(PokerRank::LowAceStraight(ranks))
+            Some(HandRank::Straight(ranks[0]))
+        } else if ranks == vec![Ace, Five, Four, Three, Two] {
+            Some(HandRank::Straight(Five))
         } else {
             None
         }
     }
 
-    fn rank_flush(&self) -> Option<PokerRank> {
+    fn rank_flush(&self) -> Option<HandRank> {
         let (ranks, _) = self
             .cards
             .iter()
@@ -185,10 +175,10 @@ impl<'a> Hand<'a> {
             })
             .ok()?;
 
-        Some(PokerRank::Flush(ranks))
+        Some(HandRank::Flush(ranks))
     }
 
-    fn rank_counter(cards: Vec<Card>) -> BTreeMap<Rank, usize> {
+    fn rank_counter(cards: Vec<Card>) -> BTreeMap<CardRank, usize> {
         cards.into_iter().fold(BTreeMap::new(), |mut count, card| {
             *count.entry(card.rank).or_insert(0) += 1;
             count
