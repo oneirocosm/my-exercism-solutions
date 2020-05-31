@@ -1,9 +1,5 @@
 #include "raindrops.h"
 
-// function prototypes -------------------------------------------------------
-
-bool divisible_by(int n, int divisor);
-
 
 // function definitions ------------------------------------------------------
 
@@ -12,15 +8,15 @@ namespace raindrops {
     {
         std::string sound = "";
 
-        if (divisible_by(n, 3)) {
+        if (n % 3 == 0) {
             sound.append("Pling");
         }
 
-        if (divisible_by(n, 5)) {
+        if (n % 5 == 0) {
             sound.append("Plang");
         }
 
-        if (divisible_by(n, 7)) {
+        if (n % 7 == 0) {
             sound.append("Plong");
         }
 
@@ -31,8 +27,3 @@ namespace raindrops {
         return sound;
     }
 }  // namespace raindrops
-
-bool divisible_by(int n, int divisor)
-{
-    return n % divisor == 0;
-}
