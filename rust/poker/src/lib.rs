@@ -27,12 +27,12 @@ struct Hand<'a> {
 impl<'a> Hand<'a> {
     fn new(repr: &'a str) -> Result<Self, CardError> {
         let mut cards = repr
-            .split(" ")
+            .split(' ')
             .map(Card::new)
             .collect::<Result<Vec<_>, _>>()?;
         let rank_count = Self::rank_counter(cards.clone());
 
-        cards.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
+        cards.sort();
         Ok(Self {
             repr,
             cards,
@@ -43,22 +43,23 @@ impl<'a> Hand<'a> {
     fn poker_rank(&self) -> HandRank {
         use HandRank::*;
         match (
-            self.rank_2_of_kind(),
-            self.rank_3_of_kind(),
+            self.rank_of_kind(2),
+            self.rank_of_kind(3),
             self.rank_straight(),
             self.rank_flush(),
-            self.rank_4_of_kind(),
+            self.rank_of_kind(4),
         ) {
-            (_, _, Some(Straight(r)), Some(Flush(_)), _) => StraightFlush(r),
-            (_, _, _, _, Some(rank)) => rank,
-            (Some(OnePair(pair)), Some(ThreeOfAKind(mut rank)), _, _, _) => {
+            (_, _, Some(rank), Some(_), _) => StraightFlush(rank),
+            (_, _, _, _, Some(rank)) => FourOfAKind(rank),
+            (Some(pair), Some(mut rank), _, _, _) => {
                 rank.extend(pair);
                 FullHouse(rank)
             }
-            (_, _, _, Some(rank), _) => rank,
-            (_, _, Some(rank), _, _) => rank,
-            (_, Some(rank), _, _, _) => rank,
-            (Some(rank), _, _, _, _) => rank,
+            (_, _, _, Some(rank), _) => Flush(rank),
+            (_, _, Some(rank), _, _) => Straight(rank),
+            (_, Some(rank), _, _, _) => ThreeOfAKind(rank),
+            (Some(rank), _, _, _, _) if rank.len() == 2 => TwoPair(rank),
+            (Some(rank), _, _, _, _) if rank.len() == 1 => OnePair(rank),
             (_, _, _, _, _) => self.rank_cards(),
         }
     }
@@ -73,62 +74,22 @@ impl<'a> Hand<'a> {
         )
     }
 
-    fn rank_2_of_kind(&self) -> Option<HandRank> {
-        use HandRank::{OnePair, TwoPair};
-
-        match self
+    fn rank_of_kind(&self, n: usize) -> Option<Vec<CardRank>> {
+        let ranks = self
             .rank_count
             .iter()
-            .filter(|(_, count)| **count == 2)
+            .filter(|(_, count)| **count == n)
             .map(|(rank, _)| *rank)
-            .collect::<Vec<_>>()
-            .into_iter()
             .rev()
-            .collect::<Vec<_>>()
-        {
-            ranks if ranks.len() == 2 => Some(TwoPair(ranks)),
-            ranks if ranks.len() == 1 => Some(OnePair(ranks)),
-            _ => None,
+            .collect::<Vec<_>>();
+        if !ranks.is_empty() {
+            Some(ranks)
+        } else {
+            None
         }
     }
 
-    fn rank_3_of_kind(&self) -> Option<HandRank> {
-        use HandRank::ThreeOfAKind;
-
-        match self
-            .rank_count
-            .iter()
-            .filter(|(_, count)| **count == 3)
-            .map(|(rank, _)| *rank)
-            .collect::<Vec<_>>()
-            .into_iter()
-            .rev()
-            .collect::<Vec<_>>()
-        {
-            ranks if ranks.len() == 1 => Some(ThreeOfAKind(ranks)),
-            _ => None,
-        }
-    }
-
-    fn rank_4_of_kind(&self) -> Option<HandRank> {
-        use HandRank::FourOfAKind;
-
-        match self
-            .rank_count
-            .iter()
-            .filter(|(_, count)| **count == 4)
-            .map(|(rank, _)| *rank)
-            .collect::<Vec<_>>()
-            .into_iter()
-            .rev()
-            .collect::<Vec<_>>()
-        {
-            ranks if ranks.len() == 1 => Some(FourOfAKind(ranks)),
-            _ => None,
-        }
-    }
-
-    fn rank_straight(&self) -> Option<HandRank> {
+    fn rank_straight(&self) -> Option<CardRank> {
         use CardRank::*;
         let ranks = self
             .cards
@@ -137,25 +98,26 @@ impl<'a> Hand<'a> {
             .map(|card| card.rank)
             .collect::<Vec<_>>();
 
-        if vec![
+        let consecutive_cards = vec![
             Ace, King, Queen, Jack, Ten, Nine, Eight, Seven, Six, Five, Four, Three, Two,
-        ]
-        .windows(5)
-        .map(|x| x.into_iter().cloned().collect::<Vec<_>>())
-        .filter(|solns| *solns == ranks)
-        .rev()
-        .count()
+        ];
+
+        if consecutive_cards
+            .windows(5)
+            .map(|x| x.iter().copied().collect::<Vec<_>>())
+            .filter(|solns| *solns == ranks)
+            .count()
             == 1
         {
-            Some(HandRank::Straight(ranks[0]))
+            Some(ranks[0])
         } else if ranks == vec![Ace, Five, Four, Three, Two] {
-            Some(HandRank::Straight(Five))
+            Some(Five)
         } else {
             None
         }
     }
 
-    fn rank_flush(&self) -> Option<HandRank> {
+    fn rank_flush(&self) -> Option<Vec<CardRank>> {
         let (ranks, _) = self
             .cards
             .iter()
@@ -175,7 +137,7 @@ impl<'a> Hand<'a> {
             })
             .ok()?;
 
-        Some(HandRank::Flush(ranks))
+        Some(ranks)
     }
 
     fn rank_counter(cards: Vec<Card>) -> BTreeMap<CardRank, usize> {
@@ -192,8 +154,7 @@ impl<'a> Hand<'a> {
             .zip(other.cards.iter())
             .map(|(s, o)| s.rank.cmp(&o.rank))
             .rev()
-            .skip_while(|&ord| ord == Ordering::Equal)
-            .next()
+            .find(|&ord| ord != Ordering::Equal)
         {
             None => Ordering::Equal,
             Some(ord) => ord,
@@ -207,12 +168,21 @@ impl PartialEq for Hand<'_> {
     }
 }
 
+impl Eq for Hand<'_> {}
+
 impl PartialOrd for Hand<'_> {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(match self.poker_rank().cmp(&other.poker_rank()) {
-            Ordering::Equal => self.cmp_rank(other),
-            ord => ord,
-        })
+        Some(
+            self.poker_rank()
+                .cmp(&other.poker_rank())
+                .then_with(|| self.cmp_rank(other)),
+        )
+    }
+}
+
+impl Ord for Hand<'_> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.partial_cmp(other).unwrap_or(Ordering::Equal)
     }
 }
 
@@ -226,19 +196,18 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Option<Vec<&'a str>> {
     }
 
     let mut hands = hands
-        .into_iter()
+        .iter()
         .map(|cards| Hand::new(cards).ok())
         .collect::<Option<Vec<Hand>>>()?;
 
-    hands.sort_by(|a, b| a.partial_cmp(b).unwrap_or(Ordering::Equal));
-
+    hands.sort();
     let hands_clone = hands.clone();
 
-    let max = hands_clone.iter().last().unwrap();
+    let max = hands_clone.iter().last()?;
     Some(
         hands
             .into_iter()
-            .filter(|hand| hand.partial_cmp(max).unwrap_or(Ordering::Equal) == Ordering::Equal)
+            .filter(|hand| hand.cmp(max) == Ordering::Equal)
             .map(|hand| hand.repr)
             .collect(),
     )
