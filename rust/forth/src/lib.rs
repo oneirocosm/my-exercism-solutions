@@ -5,11 +5,12 @@ use std::rc::Rc;
 
 pub type Value = i32;
 pub type ForthResult = Result<(), Error>;
+type Callback<'a> = Rc<RefCell<dyn FnMut(&mut Forth) -> ForthResult + 'a>>;
 
 #[derive(Clone)]
 pub struct Forth<'a> {
     stack: Vec<Value>,
-    words: HashMap<String, Rc<RefCell<dyn FnMut(&mut Forth) -> ForthResult + 'a>>>,
+    words: HashMap<String, Callback<'a>>,
 }
 
 #[derive(Debug, PartialEq)]
@@ -64,9 +65,8 @@ impl<'a> Forth<'a> {
         self.stack.pop().ok_or(Error::StackUnderflow)
     }
 
-    fn default_ops() -> HashMap<String, Rc<RefCell<dyn FnMut(&mut Forth) -> ForthResult + 'a>>> {
-        let mut operations: HashMap<String, Rc<RefCell<dyn FnMut(&mut Forth) -> ForthResult>>> =
-            HashMap::new();
+    fn default_ops() -> HashMap<String, Callback<'a>> {
+        let mut operations: HashMap<String, Callback<'a>> = HashMap::new();
         operations.insert("+".to_owned(), Self::create_add());
         operations.insert("-".to_owned(), Self::create_sub());
         operations.insert("*".to_owned(), Self::create_mul());
@@ -79,14 +79,14 @@ impl<'a> Forth<'a> {
         operations
     }
 
-    fn create_number(digit_rep: Value) -> Rc<RefCell<dyn FnMut(&mut Forth) -> ForthResult + 'a>> {
+    fn create_number(digit_rep: Value) -> Callback<'a> {
         Rc::new(RefCell::new(move |forth: &mut Forth| {
             forth.stack.push(digit_rep);
             Ok(())
         }))
     }
 
-    fn create_add() -> Rc<RefCell<impl FnMut(&mut Forth) -> ForthResult>> {
+    fn create_add() -> Callback<'a> {
         Rc::new(RefCell::new(|forth: &mut Forth| {
             let top1 = forth.pop()?;
             let top2 = forth.pop()?;
@@ -96,7 +96,7 @@ impl<'a> Forth<'a> {
         }))
     }
 
-    fn create_sub() -> Rc<RefCell<impl FnMut(&mut Forth) -> ForthResult>> {
+    fn create_sub() -> Callback<'a> {
         Rc::new(RefCell::new(|forth: &mut Forth| {
             let top1 = forth.pop()?;
             let top2 = forth.pop()?;
@@ -106,7 +106,7 @@ impl<'a> Forth<'a> {
         }))
     }
 
-    fn create_mul() -> Rc<RefCell<impl FnMut(&mut Forth) -> ForthResult>> {
+    fn create_mul() -> Callback<'a> {
         Rc::new(RefCell::new(|forth: &mut Forth| {
             let top1 = forth.pop()?;
             let top2 = forth.pop()?;
@@ -116,7 +116,7 @@ impl<'a> Forth<'a> {
         }))
     }
 
-    fn create_div() -> Rc<RefCell<impl FnMut(&mut Forth) -> ForthResult>> {
+    fn create_div() -> Callback<'a> {
         Rc::new(RefCell::new(|forth: &mut Forth| {
             let top1 = forth.pop()?;
             if top1 == 0 {
@@ -129,7 +129,7 @@ impl<'a> Forth<'a> {
         }))
     }
 
-    fn create_dup() -> Rc<RefCell<impl FnMut(&mut Forth) -> ForthResult>> {
+    fn create_dup() -> Callback<'a> {
         Rc::new(RefCell::new(|forth: &mut Forth| {
             let top = forth.pop()?;
             forth.stack.push(top);
@@ -138,14 +138,14 @@ impl<'a> Forth<'a> {
         }))
     }
 
-    fn create_drop() -> Rc<RefCell<impl FnMut(&mut Forth) -> ForthResult>> {
+    fn create_drop() -> Callback<'a> {
         Rc::new(RefCell::new(|forth: &mut Forth| {
             forth.pop()?;
             Ok(())
         }))
     }
 
-    fn create_swap() -> Rc<RefCell<impl FnMut(&mut Forth) -> ForthResult>> {
+    fn create_swap() -> Callback<'a> {
         Rc::new(RefCell::new(|forth: &mut Forth| {
             let top1 = forth.pop()?;
             let top2 = forth.pop()?;
@@ -155,7 +155,7 @@ impl<'a> Forth<'a> {
         }))
     }
 
-    fn create_over() -> Rc<RefCell<impl FnMut(&mut Forth) -> ForthResult>> {
+    fn create_over() -> Callback<'a> {
         Rc::new(RefCell::new(|forth: &mut Forth| {
             let top1 = forth.pop()?;
             let top2 = forth.pop()?;
@@ -169,7 +169,7 @@ impl<'a> Forth<'a> {
     fn create_new(
         &self,
         words: Vec<&str>,
-    ) -> Result<Rc<RefCell<impl FnMut(&mut Forth) -> ForthResult + 'a>>, Error> {
+    ) -> Result<Callback<'a>, Error> {
         let mut words = words.iter().skip(2);
         let mut subroutines = Vec::new();
         loop {
