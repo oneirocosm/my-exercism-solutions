@@ -3,19 +3,16 @@
 #include "pangram.h"
 
 namespace pangram {
-    std::unordered_set<char> const alphabet = {'a', 'b', 'c', 'd', 'e', 'f',
-        'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-        'u', 'v', 'w', 'x', 'y', 'z'};
 
     bool is_pangram(std::string const &input) {
 
-        std::unordered_set<char> letters_in_string;
-        for (char const &letter: input) {
+        std::unordered_set<char> letters_in_input;
+        for (char const letter: input) {
             if (isalpha(letter)) {
-                letters_in_string.insert(tolower(letter));
+                letters_in_input.insert(tolower(letter));
             }
         }
-        return alphabet == letters_in_string;
+        return letters_in_input.size() == 26;
     }
 
 }  // namespace pangram
