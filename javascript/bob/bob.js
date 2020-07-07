@@ -6,22 +6,20 @@ export const hey = message => {
   const shouting =
     trimmed_message.split("").some(is_letter) &&
     trimmed_message == trimmed_message.toUpperCase();
-  const question = trimmed_message.slice(-1) == "?";
+  const question = trimmed_message.endsWith("?");
 
   let response;
   if (shouting && question) {
-    response = "Calm down, I know what I'm doing!";
+    return "Calm down, I know what I'm doing!";
   } else if (shouting) {
-    response = "Whoa, chill out!";
+    return "Whoa, chill out!";
   } else if (question) {
-    response = "Sure.";
+    return "Sure.";
   } else if (trimmed_message.length == 0) {
-    response = "Fine. Be that way!";
-  } else {
-    response = "Whatever.";
+    return "Fine. Be that way!";
   }
 
-  return response;
+  return "Whatever.";
 };
 
 const is_letter = candidate => {
