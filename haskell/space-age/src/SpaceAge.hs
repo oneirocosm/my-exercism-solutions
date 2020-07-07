@@ -10,13 +10,13 @@ data Planet = Mercury
             | Neptune
 
 ageOn :: Planet -> Float -> Float
-ageOn planet seconds = 
-    case planet of
-        Earth -> seconds / 31557600.0
-        _     -> (ageOn Earth seconds) / (earthYrs planet)
+ageOn planet seconds = seconds / secondsInEarthYear / earthYrsInPlanetYear planet
 
-earthYrs :: Planet -> Float
-earthYrs planet =
+secondsInEarthYear :: Float
+secondsInEarthYear = 31557600.0
+
+earthYrsInPlanetYear :: Planet -> Float
+earthYrsInPlanetYear planet =
     case planet of
         Mercury -> 0.2408467
         Venus   -> 0.61519726
