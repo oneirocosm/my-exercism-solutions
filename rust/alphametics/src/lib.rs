@@ -53,39 +53,23 @@ impl Alphametic {
                     .any(|(letter, val)| non_zero.contains(&letter) && *val == 0u8)
             });
 
-        for candidate in candidates {
+        candidates.into_iter().find(|candidate| {
             let mut lhs_words = self.lhs_words.clone();
             let mut rhs_word = self.rhs_word.clone();
-            let mut carry = 0;
-            let mut candidate_valid = true;
-            for _ in 0..num_eq {
-                let mut lhs_sum: u32 = 0;
-                //println!("new equation");
-                for word in &mut lhs_words {
-                    let temp = word.pop();
-                    lhs_sum += match temp {
-                        None => 0,
-                        Some(c) => candidate[&c] as u32,
-                    }
-                }
-                lhs_sum += carry;
 
+            (0..num_eq).try_fold(0u32, |carry, _| {
+                let lhs_sum = lhs_words.iter_mut().fold(0, |sum, word| {
+                    sum + word.pop().map(|c| candidate[&c] as u32).unwrap_or(0u32)
+                }) + carry;
                 let rhs_sum = candidate[&rhs_word.pop().unwrap()] as u32;
-                carry = lhs_sum / 10;
-                candidate_valid = (lhs_sum % 10) == rhs_sum;
 
-                if !candidate_valid {
-                    break;
+                if lhs_sum % 10 == rhs_sum {
+                    Ok(lhs_sum / 10)
+                } else {
+                    Err(())
                 }
-            }
-            if !candidate_valid || carry != 0 {
-                continue;
-            } else {
-                return Some(candidate);
-            }
-        }
-
-        None
+            }) == Ok(0)
+        })
     }
 
     fn find_non_zero_chars(&self) -> Vec<&char> {
@@ -100,7 +84,5 @@ impl Alphametic {
 }
 
 pub fn solve(input: &str) -> Option<HashMap<char, u8>> {
-    let alphametic = Alphametic::new(input);
-
-    alphametic.solve()
+    Alphametic::new(input).solve()
 }
