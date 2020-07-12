@@ -2,12 +2,13 @@ module Pangram (isPangram) where
 
 import qualified Data.Char as Char
 import qualified Data.HashSet as HashSet
+import           Data.HashSet (HashSet)
 
 isPangram :: String -> Bool
-isPangram text = 26 == HashSet.size (HashSet.fromList (keepLetters (stringToLower text)))
+isPangram text = HashSet.null (foldr deleteLetters lowerAlpha text)
 
-stringToLower :: String -> String
-stringToLower = Prelude.map Char.toLower
+deleteLetters :: Char -> HashSet Char -> HashSet Char
+deleteLetters letter set = HashSet.delete (Char.toLower letter) set
 
-keepLetters :: String -> String
-keepLetters = filter Char.isAsciiLower
+lowerAlpha :: HashSet Char
+lowerAlpha = HashSet.fromList ['a'..'z']
