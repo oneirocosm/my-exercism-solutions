@@ -1,32 +1,18 @@
-// pascals-triangle.js
-
 export const rows = n => {
-  const triangle = [];
-  for (let i = 0; i < n; ++i) {
+  if (n == 0) {
+    return [];
+  }
+
+  const triangle = [[1]];
+  for (let i = 1; i < n; ++i) {
     const row = [];
-    if (i == 0) {
-      row.push(1);
-    } else {
-      row.push(1);
-      const old_row = triangle[triangle.length - 1];
-      const old_pairs = windowSlices(old_row, 2);
-      for (const pair of old_pairs) {
-        const sum = pair.reduce((a, b) => a + b, 0);
-        row.push(sum);
-      }
-      row.push(1);
+    const prev_row = triangle[i - 1];
+    for (let j = 0; j < i + 1; ++j) {
+      const prev_left = prev_row[j - 1] || 0;
+      const prev_right = prev_row[j] || 0;
+      row.push(prev_left + prev_right);
     }
     triangle.push(row);
   }
   return triangle;
-};
-
-const windowSlices = (fullArray, size) => {
-  let i = 0;
-  const slices = [];
-  while (i + size <= fullArray.length) {
-    slices.push(fullArray.slice(i, i + size));
-    ++i;
-  }
-  return slices;
 };
