@@ -1,7 +1,3 @@
-export function twoFer(otherName?: string): string {
-  if (!otherName) {
-    otherName = "you";
-  }
-
+export function twoFer(otherName = "you"): string {
   return `One for ${otherName}, one for me.`;
 }
