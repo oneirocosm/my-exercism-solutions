@@ -17,6 +17,6 @@ export class GradeSchool {
 
   grade(num) {
     const students = this.db[num] || [];
-    return students.map(x => x);
+    return [...students];
   }
 }
