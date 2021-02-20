@@ -1,9 +1,10 @@
-let RandExp = require("randexp");
-
 export class Cipher {
   constructor(key = "") {
     if (!key) {
-      key = new RandExp(/[a-z]{10}/).gen();
+      const ALPHABET = "abcdefghijklmnopqrstuvwxyz";
+      for (let i = 0; i < 10; i++) {
+        key += ALPHABET.charAt(Math.floor(Math.random() * ALPHABET.length));
+      }
     }
     this.key = key.toLowerCase();
   }
