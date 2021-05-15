@@ -1,5 +1,5 @@
 const RNA_LETTERS = ["C", "G", "A", "U"];
-const DNA_LETTERS = ["C", "G", "A", "U"];
+const DNA_LETTERS = ["C", "G", "T", "U"];
 export type RnaValid = typeof RNA_LETTERS[number];
 export type DnaValid = typeof DNA_LETTERS[number];
 
