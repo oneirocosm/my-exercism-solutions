@@ -1,7 +1,7 @@
 export type Opaque<K, T> = T & { __TYPE__: K };
 
 type RnaValid = Opaque<string, "RnaValid">;
-type DnaValid = Opaque<string, "RnaValid">;
+type DnaValid = Opaque<string, "DnaValid">;
 
 function createRnaValid(str: string): RnaValid {
   const RNA_LETTERS = new Set<string>(["C", "G", "A", "U"]);
